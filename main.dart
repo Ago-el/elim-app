@@ -89,11 +89,75 @@ class _MembersState extends State<Members>{List<dynamic> items=[];bool loading=t
 Future<void> load()async{try{final d=await ApiClient().get('/api/v1/members');if(mounted)setState((){items=d is List?d:(d['items']??[]);loading=false;});}catch(_){if(mounted)setState(()=>loading=false);}}
 @override Widget build(BuildContext c)=>Scaffold(appBar:AppBar(title:const Text('Membres')),body:loading?const Center(child:CircularProgressIndicator()):items.isEmpty?const Center(child:Text('Aucun membre disponible.')):RefreshIndicator(onRefresh:load,child:ListView.builder(itemCount:items.length,itemBuilder:(_,i){final m=Map<String,dynamic>.from(items[i]);final n='${m['first_name']??''} ${m['last_name']??''}'.trim();return Card(child:ListTile(leading:CircleAvatar(child:Text(n.isEmpty?'?':n[0])),title:Text(n.isEmpty?'Membre':n),subtitle:Text(m['phone']?.toString()??m['email']?.toString()??'')));})));}
 
-class Churches extends StatefulWidget{const Churches({super.key});@override State<Churches> createState()=>_ChurchesState();}
-class _ChurchesState extends State<Churches>{List<dynamic> items=[];bool loading=true;@override void initState(){super.initState();load();}
-Future<void> load()async{try{final d=await ApiClient().get('/api/v1/churches');if(mounted)setState((){items=d is List?d:(d['items']??[]);loading=false;});}catch(_){if(mounted)setState(()=>loading=false);}}
-@override Widget build(BuildContext c)=>Scaffold(appBar:AppBar(title:const Text('Églises & annexes')),body:loading?const Center(child:CircularProgressIndicator()):items.isEmpty?const Center(child:Text('Aucune église disponible.')):ListView.builder(itemCount:items.length,itemBuilder:(_,i){final m=Map<String,dynamic>.from(items[i]);return Card(child:ListTile(leading:const CircleAvatar(child:Icon(Icons.church)),title:Text(m['name']?.toString()??'Église'),subtitle:Text(m['city']?.toString()??m['country']?.toString()??'')));}));}
+class _ChurchesState extends State<Churches>{
+  List<dynamic> items=[];
+  bool loading=true;
+  bool creating=false;
+  
+  @override 
+  void initState(){
+    super.initState();
+    load();
+  }
+  
+  Future<void> load()async{
+    try{
+      final d=await ApiClient().get('/api/v1/churches');
+      if(mounted)setState((){
+        items=d is List?d:(d['items']??[]);
+        loading=false;
+      });
+    }catch(_){
+      if(mounted)setState(()=>loading=false);
+    }
+  }
 
+  Future<void> createEgliseZAKPOTA() async {
+    setState(()=>creating=true);
+    try {
+      await ApiClient().createChurch("ELIM ZA-KPOTA", "BJ", "ZA-KPOTA");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("ELIM ZA-KPOTA créée avec succès!"))
+      );
+      await load();
+    } catch(e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Erreur: $e"))
+      );
+    }
+    setState(()=>creating=false);
+  }
+
+  @override 
+  Widget build(BuildContext c)=>Scaffold(
+    appBar:AppBar(
+      title:const Text('Églises & annexes'),
+      actions: [
+        IconButton(
+          icon: creating? CircularProgressIndicator(color: Colors.white) : Icon(Icons.add),
+          onPressed: creating? null : createEgliseZAKPOTA,
+        )
+      ]
+    ),
+    body:loading?const Center(child:CircularProgressIndicator()):
+    items.isEmpty?Center(child:Column(mainAxisAlignment:MainAxisAlignment.center,children:[
+      Text('Aucune église disponible.'),
+      SizedBox(height: 20),
+      FilledButton(
+        onPressed: createEgliseZAKPOTA,
+        child: Text("Créer ELIM ZA-KPOTA")
+      )
+    ])):
+    ListView.builder(itemCount:items.length,itemBuilder:(_,i){
+      final m=Map<String,dynamic>.from(items[i]);
+      return Card(child:ListTile(
+        leading:const CircleAvatar(child:Icon(Icons.church)),
+        title:Text(m['name']?.toString()??'Église'),
+        subtitle:Text(m['city']?.toString()??m['country']?.toString()??'')
+      ));
+    })
+  );
+}
 class Profile extends StatefulWidget{const Profile({super.key});@override State<Profile> createState()=>_ProfileState();}
 class _ProfileState extends State<Profile>{Map<String,String> u={};@override void initState(){super.initState();Session.user().then((v){if(mounted)setState(()=>u=v);});}
 @override Widget build(BuildContext c)=>ListView(padding:const EdgeInsets.all(16),children:[const CircleAvatar(radius:44,child:Icon(Icons.person,size:44)),const SizedBox(height:14),Center(child:Text(u['name']??'Membre ELIM',style:const TextStyle(fontSize:22,fontWeight:FontWeight.bold))),const SizedBox(height:20),Card(child:ListTile(leading:const Icon(Icons.badge),title:const Text('Rôle'),subtitle:Text(u['role']??'member'))),Card(child:ListTile(leading:const Icon(Icons.email),title:const Text('Email'),subtitle:Text(u['email']??'')))]);}
