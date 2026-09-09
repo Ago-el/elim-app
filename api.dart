@@ -1,54 +1,58 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert'; 
+import 'package:http/http.dart' as http; 
+import 'package:shared_preferences/shared_preferences.dart'; 
 
-class ApiClient {
+class ApiClient { 
   static const baseUrl = String.fromEnvironment(
-    'API_BASE_URL',
-    defaultValue: 'https://elim-ap.onrender.com' ,
+    'API_BASE_URL', 
+    defaultValue: 'https://elim-ap.onrender.com',
   );
-
-  Future<Map<String,String>> headers() async {
-    final p=await SharedPreferences.getInstance();
-    final token=p.getString('token');
-    return {'Content-Type':'application/json', if(token!=null && token.isNotEmpty) 'Authorization':'Bearer $token'};
+  
+  Future<Map<String,String>> headers() async { 
+    final p=await SharedPreferences.getInstance(); 
+    final token=p.getString('token'); 
+    return {
+      'Content-Type':'application/json', 
+      if(token!=null && token.isNotEmpty) 'Authorization':'Bearer $token'
+    }; 
+  } 
+  
+  Future<dynamic> get(String path) async { 
+    final r=await http.get(Uri.parse('$baseUrl$path'),headers:await headers()); 
+    return decode(r); 
+  } 
+  
+  Future<dynamic> post(String path,Map<String,dynamic> body) async { 
+    final r=await http.post(Uri.parse('$baseUrl$path'),headers:await headers(),body:jsonEncode(body)); 
+    return decode(r); 
+  } 
+  
+  dynamic decode(http.Response r) { 
+    dynamic d; 
+    try { d=r.body.isEmpty?null:jsonDecode(r.body); } 
+    catch(_){ d=r.body; } 
+    if(r.statusCode<200 || r.statusCode>=300) { 
+      throw Exception(d is Map ? (d['detail']??'Erreur serveur') : 'Erreur serveur (${r.statusCode})'); 
+    } 
+    return d; 
   }
 
-  Future<dynamic> get(String path) async {
-    final r=await http.get(Uri.parse('$baseUrl$path'),headers:await headers());
-    return decode(r);
-  }
-
-  Future<dynamic> post(String path,Map<String,dynamic> body) async {
-    final r=await http.post(Uri.parse('$baseUrl$path'),headers:await headers(),body:jsonEncode(body));
-    return decode(r);
-  }
-
-  dynamic decode(http.Response r) {
-    dynamic d;
-    try { d=r.body.isEmpty?null:jsonDecode(r.body); } catch(_){ d=r.body; }
-    if(r.statusCode<200 || r.statusCode>=300) {
-      throw Exception(d is Map ? (d['detail']??'Erreur serveur') : 'Erreur serveur (${r.statusCode})');
-    }
-    return d;
-  }
-}
-'https://elim-ap.onrender.com' ,
-// 1. Connexion Admin
+  // 1. Connexion Admin
   Future<Map> connexionAdmin(String email, String motDePasse) async {
     final r = await http.post(
-      Uri.parse('$baseUrl/api/v1/auth/admin'), // ← CHANGER ICI: $URL de base → $baseUrl
+      Uri.parse('$baseUrl/api/v1/auth/admin'),
       headers: {'Content-Type':'application/json'},
       body: jsonEncode({"email": email, "password": motDePasse})
     );
-    return décoder(r);
+    return decode(r); // ← decode pas décoder
   }
 
   // 2. Créer Église
   Future<Map> creerEglise(String nom, String pays, String ville) async {
-    return await poste('/api/v1/churches', {
+    return await post('/api/v1/churches', { // ← post pas poste
       "name": nom,
       "country": pays,
       "city": ville
     });
   }
+} // ← N'oublie pas cette }
