@@ -1,0 +1,10 @@
+plugins { id "com.android.application"; id "kotlin-android"; id "dev.flutter.flutter-gradle-plugin" }
+android {
+  namespace "com.elim.app"
+  compileSdk 35
+  defaultConfig { applicationId "com.elim.app"; minSdk 23; targetSdk 35; versionCode 100; versionName "1.0.0" }
+  buildTypes { release { signingConfig signingConfigs.debug } }
+}
+flutter { source "../.." }
+def gs=file("google-services.json")
+if(gs.exists()){ apply plugin: "com.google.gms.google-services" }
