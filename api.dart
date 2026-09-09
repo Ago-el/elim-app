@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class ApiClient {
   static const baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'https://YOUR-ELIM-API.onrender.com',
+    defaultValue: 'https://elim-ap.onrender.com' ,
   );
 
   Future<Map<String,String>> headers() async {
@@ -33,3 +33,22 @@ class ApiClient {
     return d;
   }
 }
+'https://elim-ap.onrender.com' ,
+// 1. Connexion Admin
+  Future<Map> connexionAdmin(String email, String motDePasse) async {
+    final r = await http.post(
+      Uri.parse('$baseUrl/api/v1/auth/admin'), // ← CHANGER ICI: $URL de base → $baseUrl
+      headers: {'Content-Type':'application/json'},
+      body: jsonEncode({"email": email, "password": motDePasse})
+    );
+    return décoder(r);
+  }
+
+  // 2. Créer Église
+  Future<Map> creerEglise(String nom, String pays, String ville) async {
+    return await poste('/api/v1/churches', {
+      "name": nom,
+      "country": pays,
+      "city": ville
+    });
+  }
