@@ -1,0 +1,37 @@
+version: 2.1
+
+jobs:
+  build-android:
+    docker:
+      - image: cimg/android:2024.06-ndk
+    working_directory: ~/elim-app
+    
+    steps:
+      - checkout
+      
+      # 1. INSTALLER FLUTTER
+      - run:
+          name: Installer Flutter Stable
+          command: |
+            git clone https://github.com/flutter.git -b stable --depth 1
+            echo 'export PATH="$PATH:~/flutter/bin"' >> $BASH_ENV
+            source $BASH_ENV
+      
+      # 2. DEBUG / CHECK AVANT BUILD
+      - run: flutter doctor
+      - run: flutter pub get
+      - run: flutter analyze  # <-- CHECK LE CODE. Stop si erreur
+      - run: flutter test     # <-- Lance les tests si tu en as
+      
+      # 3. COMPILER SEULEMENT SI TOUT EST OK
+      - run: flutter build apk --release --target-platform android-arm64
+      
+      # 4. SAUVEGARDER L'APK
+      - store_artifacts:
+          path: build/app/outputs/flutter-apk/app-release.apk
+          destination: ELIM-release.apk
+
+workflows:
+  build:
+    jobs:
+      - build-android
