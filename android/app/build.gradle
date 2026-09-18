@@ -1,10 +1,34 @@
-plugins { id "com.android.application"; id "kotlin-android"; id "dev.flutter.flutter-gradle-plugin" }
-android {
-  namespace "com.elim.app"
-  compileSdk 35
-  defaultConfig { applicationId "com.elim.app"; minSdk 23; targetSdk 35; versionCode 100; versionName "1.0.0" }
-  buildTypes { release { signingConfig signingConfigs.debug } }
+plugins {
+    id "com.android.application"
+    id "kotlin-android"
+    id "dev.flutter.flutter-gradle-plugin"
 }
-flutter { source "../.." }
-def gs=file("google-services.json")
-if(gs.exists()){ apply plugin: "com.google.gms.google-services" }
+
+android {
+    namespace "com.elim.app"
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "com.elim.app"
+        minSdk 23
+        targetSdk 35
+        versionCode 100
+        versionName "1.0.0"
+    }
+
+    buildTypes {
+        release {
+            signingConfig signingConfigs.debug
+            minifyEnabled false // ajoute ça pour éviter les bugs
+        }
+    }
+}
+
+flutter {
+    source "../.."
+}
+
+// Google Services - garde ça si tu utilises Firebase
+if (file("google-services.json").exists()) {
+    apply plugin: "com.google.gms.google-services"
+}
