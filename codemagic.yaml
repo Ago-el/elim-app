@@ -1,0 +1,18 @@
+workflows:
+  android-apk:
+    name: Android APK Release
+    max_build_duration: 120
+    instance_type: mac_mini_m2
+    environment:
+      flutter: stable
+    scripts:
+      - name: Clean Gradle Cache
+        script: rm -rf ~/.gradle/wrapper/dists/gradle-8.14.0-all
+      - name: Flutter clean
+        script: flutter clean
+      - name: Get packages
+        script: flutter pub get
+      - name: Build APK Release
+        script: flutter build apk --release
+    artifacts:
+      - build/app/outputs/flutter-apk/*.apk
